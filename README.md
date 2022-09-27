@@ -85,3 +85,32 @@ Once sweep has ran succesful finetuning can start using:
 ```
 poetry run python robust_detection/train/train_fine_tune.py --og_data_path mnist/mnist3_skip --target_data_path mnist/mnist3_all --agg_case True --fold 0 --sweep_id <sweepid>
 ```
+
+# WSOD_transfer 
+
+For the experiments with the CLEVR-mini and Molecules data sets it is needed to use this [fork](https://github.com/iclr2023-ProbKT/wsod_transfer).
+
+## Instructions for applying WSOD_transfer on CLEVR-mini data set(1-fold)
+
+```
+python  tools/train_net.py --config-file wsod/clevr_skip_to_all/ocud_it0.yaml
+python  tools/train_net.py --config-file wsod/clevr_skip_to_all/mil_it0.yaml
+python wsod/pseudo_label_objects.py output/clevr_skip_to_all_long_fold_0/mil_it0/inference/clevr_all_nofold clevr 0 0.8
+python  tools/train_net.py --config-file wsod/clevr_skip_to_all/ocud_it1.yaml --start_iter 0
+python  tools/train_net.py --config-file wsod/clevr_skip_to_all/mil_it1.yaml --start_iter 0
+python wsod/pseudo_label_objects.py output/clevr_skip_to_all_long_fold_0/mil_it1/inference/clevr_all_nofold clevr 0 0.8
+python  tools/train_net.py --config-file wsod/clevr_skip_to_all/ocud_it2.yaml --start_iter 0
+python  tools/train_net.py --config-file wsod/clevr_skip_to_all/mil_it2.yaml --start_iter 0
+python wsod/pseudo_label_objects.py output/clevr_skip_to_all_long_fold_0/mil_it2/inference/clevr_all_nofold clevr 0 0.8
+python  tools/train_net.py --config-file wsod/clevr_skip_to_all/distill_resnet50c4.yaml
+```
+
+## Instructions to evaluate performance
+
+```
+python tools/create_np_preds.py --preds_file output/clevr_skip_to_all_long_fold_0/mil_it2/distill_resnet50/inference/clevr_all_test/predictions.pth --outputfile preds_clevr_all_long_fold_0.npy
+```
+then in the ProbKT environment:
+```
+python tools/evaluate_preds.py --preds_file preds_clevr_skip_long_fold_0.npy --true_data_dir ../ProbKT/generate_data/clevr/clevr_skip_cube/test/
+```
